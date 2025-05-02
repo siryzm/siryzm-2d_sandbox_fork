@@ -48,6 +48,24 @@ const gradients = {
     { value: 10, color: [247, 59, 247] },
     { value: 15, color: [153, 115, 228] },
     { value: 20, color: [224, 224, 224] }
+  ],
+
+  winds: [
+    { value: 0, color: [0,136,255] },
+    { value: 5, color: [0,255,255] },
+    { value: 10, color: [0,255,128] },
+  //  { value: 15, color: [0,255,128] },
+    { value: 20, color: [0,255,64] },
+    { value: 25, color: [63,254,0] },
+  //  { value: 30, color: [63,254,0] },
+  //  { value: 35, color: [63,254,0] },
+    { value: 40, color: [191,254,0] },
+  //  { value: 45, color: [191,254,0] },
+    { value: 50, color: [255,128,0] },
+  //  { value: 55, color: [255,128,0] },
+    { value: 60, color: [255,0,0] },
+  //  { value: 65, color: [255,0,0] },
+    { value: 70, color: [255,0,255] },
   ]
 };
 

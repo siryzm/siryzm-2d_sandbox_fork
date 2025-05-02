@@ -957,7 +957,7 @@ class Weatherstation
     set_text('Dewpoint: ' + printTemp(this.#dewpoint),0,(this.#font_size*2));
 
     // velocity
-    c.fillStyle = 'rgb(255,255,255)';
+    c.fillStyle = get_gradient(gradients.winds,vel_lock);
     set_text('Winds: ' + printVelocity(this.#velocity),0,(this.#font_size*3));
 
     // rainfall
@@ -2908,13 +2908,6 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
       c.fillText('' + printDistance(map_range(simXpos, 0, sim_res_y, 0, guiControls.simHeight / 1000.0)), this.graphCanvas.width - 70, 20);
 
-      // Draw wind variables
-      for (var y = surfaceLevel; y < sim_res_y; y+=10) {
-        var scrYpos = map_range(y, sim_res_y, 0, 0, graphBottem);
-        var velocity = rawVelocityTo_ms(baseTextureValues[4 * y]); // horizontal wind velocity
-        c.fillText(printVelocity(velocity),(graphCanvas.width-50),scrYpos);
-      }
-
       // Draw temperature line
       c.beginPath();
       for (var y = 0; y < sim_res_y; y++) {
@@ -3019,7 +3012,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
         var scrYpos = map_range(y, sim_res_y, 0, 0, graphBottem);
 
-        var velocity = rawVelocityTo_ms(Math.sqrt(Math.pow(baseTextureValues[4 * y], 2) + Math.pow(baseTextureValues[4 * y + 1], 2)));
+       // var velocity = rawVelocityTo_ms(Math.sqrt(Math.pow(baseTextureValues[4 * y], 2) + Math.pow(baseTextureValues[4 * y + 1], 2)));
 
         var rh = round_number(calculateRelativeHumidity(temp,dewPoint));
         var pwat = get_pwat(dewPoint);
@@ -3030,7 +3023,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
         // c.fillText("Surface: " + y, 10, scrYpos);
         if (y == simYpos) {
           c.fillText('' + printAltitude(map_range(y - 1, 0, sim_res_y, 0, guiControls.simHeight)), 5, scrYpos + 5);
-          c.fillText('' + printVelocity(velocity), this.graphCanvas.width - 113, scrYpos + 20);
+         // c.fillText('' + printVelocity(velocity), this.graphCanvas.width - 60, scrYpos + 20);
 
           c.fillText(`RH: ${rh}%`,(graphCanvas.width-220),80);
           c.fillText(`PWAT: ${pwat.toFixed(2)}in.`,(graphCanvas.width-220),100);
@@ -3051,10 +3044,10 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
       c.stroke();
 
       // Draw rising parcel temperature line
-      var water = waterTextureValues[4 * simYpos];
-      var potentialTemp = baseTextureValues[4 * simYpos + 3];
-      var initialTemperature = potentialTemp - ((simYpos / sim_res_y) * guiControls.simHeight * guiControls.dryLapseRate) / 1000.0;
-      var initialCloudWater = waterTextureValues[4 * simYpos + 1];
+      var water = waterTextureValues[4 * surfaceLevel];
+      var potentialTemp = baseTextureValues[4 * surfaceLevel + 3];
+      var initialTemperature = potentialTemp - ((surfaceLevel / sim_res_y) * guiControls.simHeight * guiControls.dryLapseRate) / 1000.0;
+      var initialCloudWater = waterTextureValues[4 * surfaceLevel + 1];
       // var temp = potentialTemp - ((y / sim_res_y) * guiControls.simHeight *
       // guiControls.dryLapseRate) / 1000.0 - 273.15;
       var prevTemp = initialTemperature;
@@ -3065,10 +3058,8 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
       reachedSaturation = false;
 
       c.beginPath();
-      var scrYpos = map_range(simYpos, sim_res_y, 0, 0, graphBottem);
-      c.moveTo(T_to_Xpos(KtoC(initialTemperature), scrYpos), scrYpos);
 
-      for (var y = simYpos + 1; y < sim_res_y; y++) {
+      for (var y = (surfaceLevel+1); y < sim_res_y; y++) {
         var dT = drylapsePerCell;
 
         var cloudWater = Math.max(water - maxWater(prevTemp + dT),
@@ -3096,7 +3087,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
           c.strokeStyle = '#616161'; // dark green for dry lapse rate
           c.stroke();
 
-          if (y - simYpos > 5) {
+          if (y - surfaceLevel > 5) {
             c.beginPath();
             c.setLineDash([0,0]);
             c.moveTo(T_to_Xpos(KtoC(T), scrYpos) - 0, scrYpos); // temperature
@@ -3118,9 +3109,32 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
       } else
         c.strokeStyle = '#616161';
       
+      c.stroke();
+      c.fillText(`CAPE: ${Math.round(get_cape(T_parcel,T_env)*sim_res_y)}J/kg`,(graphCanvas.width-220),120);
+      c.setLineDash([0,0]);
+
+      // Draw wind indicators
+      c.beginPath();
+      for (var y = surfaceLevel; y < sim_res_y; y++) {
+
+        var scrYpos = map_range(y, sim_res_y, 0, 0, graphBottem);
+
+        var velocity = rawVelocityTo_ms(baseTextureValues[4 * y]); // horizontal wind velocity
+
+        let Xpos = this.graphCanvas.width - 70;
+
+        if (y == simYpos){
+          c.fillText(`${printVelocity(Math.abs(velocity))}`, this.graphCanvas.width - 60, scrYpos + 20);
+        };
+
+        c.beginPath();
+        c.moveTo(Xpos, scrYpos);
+        c.lineTo((Xpos+(velocity*2)), scrYpos); // draw line segment
+
+        c.lineWidth = 2.0; // 3
+        c.strokeStyle = get_gradient(gradients.winds,Math.abs(velocity*1.944));
         c.stroke();
-        c.fillText(`CAPE: ${Math.round(get_cape(T_parcel,T_env)*sim_res_y)}J/kg`,(graphCanvas.width-220),120);
-        c.setLineDash([0,0]);
+      }
 
       function T_to_Xpos(T, y)
       {
@@ -4917,7 +4931,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
               // console.log('lightningDataValues: ', lightningDataValues[0], lightningDataValues[1], lightningDataValues[2], IterNum);
             }
 
-            if (displayWeatherStations && IterNum % 208 == 0) { // ~every 60 in game seconds:  0.00008 *3600 * 208 = 59.9
+            if (displayWeatherStations && IterNum % 52 == 0) { // ~every 60 in game seconds:  0.00008 *3600 * 208 = 59.9
               for (i = 0; i < weatherStations.length; i++) {
                 weatherStations[i].measure();
               }
