@@ -50,30 +50,30 @@ const mToFt = 3.28084;
 const saveFileVersionID = 263574036; // Uint32 id to check if save file is compatible
 
 const guiControls_default = {
-  vorticity : 0.005,
+  vorticity : 0.007,
   dragMultiplier : 0.01, // 0.1
   wind : -0.0001,
-  globalEffectsHeight : 10000,
-  globalDrying : 0.000003, // 0.000010
-  globalHeating : 0.0,
+  globalEffectsHeight : 3500,
+  globalDrying : 0.000001, // 0.000010
+  globalHeating : -0.00005,
   sunIntensity : 1.0,
-  waterTemperature : 25.0, // °C
+  waterTemperature : 27.0, // °C
   landEvaporation : 0.00005,
   waterEvaporation : 0.0001,
-  evapHeat : 2.90,          //  Real: 2260 J/g
+  evapHeat : 2.2,          //  Real: 2260 J/g
   meltingHeat : 0.43,       //  Real:  334 J/g
   waterWeight : 0.50,       // 0.50
   inactiveDroplets : 0,
   aboveZeroThreshold : 1.0, // PRECIPITATION
-  subZeroThreshold : 0.005, // 0.01
-  spawnChance : 0.00005,    // 30. 10 to 50
+  subZeroThreshold : 0.01, // 0.01
+  spawnChance : 0.00002,    // 30. 10 to 50
   snowDensity : 0.2,        // 0.3
   fallSpeed : 0.0003,
   growthRate0C : 0.0001,    // 0.0005
   growthRate_30C : 0.001,   // 0.01
-  freezingRate : 0.01,
-  meltingRate : 0.01,
-  evapRate : 0.0008, // 0.0005
+  freezingRate : 0.0025,
+  meltingRate : 0.0025,
+  evapRate : 0.0005, // 0.0005
   displayMode : 'DISP_REAL',
   wrapHorizontally : true,
   SmoothCam : true,
@@ -98,7 +98,7 @@ const guiControls_default = {
   paused : false,
   IterPerFrame : 4,
   auto_IterPerFrame : false,
-  dryLapseRate : 9.81,   // Real: 9.81 degrees / km
+  dryLapseRate : 10,   // Real: 9.81 degrees / km
   simHeight : 12000,       // meters
   twelveHourClock : false, // only for display.  false = metric
   lengthUnit : 'LENGTH_UNIT_IMPERIAL',
@@ -562,7 +562,7 @@ class Weatherstation
 
   #font_size = 10;
   #width = 130; // 70 display size
-  #height = ((this.#font_size*7)*1.3);
+  #height = ((this.#font_size*6)*1.3);
 
   #isOnSurface = true;
 
@@ -839,14 +839,6 @@ class Weatherstation
       this.#dewpoint = Math.min(this.#temperature, this.#dewpoint);
     }
 
-    if (!guiControls.paused){
-    var rate = ((waterTextureValues[2]/60)/24);
-    
-    if (this.#temperature > 0){
-      this.#rainfall += rate;
-    };
-  };
-
     this.#relativeHumd = relativeHumd(T, waterTextureValues[4 + 0]);
 
     if (guiControls.realDewPoint) {
@@ -960,21 +952,17 @@ class Weatherstation
     c.fillStyle = get_gradient(gradients.winds,vel_lock);
     set_text('Winds: ' + printVelocity(this.#velocity),0,(this.#font_size*3));
 
-    // rainfall
-    c.fillStyle = get_gradient(gradients.rainfall,this.#rainfall);
-    set_text('Precip Total: ' + printRainfall(this.#rainfall),0,(this.#font_size*4));
-
     // humidity
     c.fillStyle = 'rgb(255,255,255)';
-    set_text((`Relative Humidity: ${round(this.#relativeHumd)}%`),0,(this.#font_size*5));
+    set_text((`Relative Humidity: ${round(this.#relativeHumd)}%`),0,(this.#font_size*4));
 
     // soil moisture
     c.fillStyle = 'rgb(255,255,255)';
-    set_text((`💧 ${printSoilMoisture(this.#soilMoisture)}`),0,(this.#font_size*6));
+    set_text((`💧 ${printSoilMoisture(this.#soilMoisture)}`),0,(this.#font_size*5));
 
     // snow height
     c.fillStyle = 'rgb(255,255,255)';
-    set_text((`❄ ${printSnowHeight(this.#snowHeight)}`),0,(this.#font_size*7));
+    set_text((`❄ ${printSnowHeight(this.#snowHeight)}`),0,(this.#font_size*6));
  //   }
 
     // Position pointer
