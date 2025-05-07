@@ -383,30 +383,9 @@ function realToPotentialT(realT, y) { return realT + (y / sim_res_y) * dryLapse;
 
 function potentialToRealT(potentialT, y) { return potentialT - (y / sim_res_y) * dryLapse; }
 
-function round(number){
-  return (Math.round(number*10)/10);
-  };  
-
-function round_number(number,pos){
-  var pos = (pos || 10);
-    return Number((Math.round(number*pos)/pos).toPrecision(3));
-  }
-
-  function calculateVaporPressure(temperature) {
-    return (6.112*Math.exp((17.67*temperature)/(temperature+243.5)));
-  };
-    
-  function calculateRelativeHumidity(temperature,dewPoint) {
-  let vaporPressureTemperature = calculateVaporPressure(temperature);
-  let vaporPressureDewPoint = calculateVaporPressure(dewPoint);
-    return Math.max(0,((100*vaporPressureDewPoint)/vaporPressureTemperature));
-  };
-
-
 function printRainfall(amount){
-  return (guiControls.lengthUnit == 'LENGTH_UNIT_IMPERIAL') && (round(amount) + ' in.') || (round(amount*25.4) + ' mm.');
+  return (guiControls.lengthUnit == 'LENGTH_UNIT_IMPERIAL') && (round_number(amount) + ' in.') || (round_number(amount*25.4) + ' mm.');
 };
-
 
 // Global Classes:
 
@@ -834,16 +813,12 @@ class Weatherstation
     var waterTextureValues = new Float32Array(2 * 4);
     gl.readPixels(this.#x, this.#y - 1, 1, 2, gl.RGBA, gl.FLOAT, waterTextureValues);
 
-    this.#dewpoint = KtoC(dewpoint(waterTextureValues[0]));
+    this.#dewpoint = KtoC(dewpoint(waterTextureValues[4]))
     if (guiControls.realDewPoint) {
       this.#dewpoint = Math.min(this.#temperature, this.#dewpoint);
     }
 
-    this.#relativeHumd = relativeHumd(T, waterTextureValues[4 + 0]);
-
-    if (guiControls.realDewPoint) {
-      this.#relativeHumd = Math.min(this.#relativeHumd, 100.0);
-    }
+    this.#relativeHumd = get_rh(this.#temperature,this.#dewpoint);
 
     if (waterTextureValues[0] > 1110) { // surface below
       this.#soilMoisture = waterTextureValues[2];
@@ -954,7 +929,7 @@ class Weatherstation
 
     // humidity
     c.fillStyle = 'rgb(255,255,255)';
-    set_text((`Relative Humidity: ${round(this.#relativeHumd)}%`),0,(this.#font_size*4));
+    set_text((`Relative Humidity: ${round_number(this.#relativeHumd)}%`),0,(this.#font_size*4));
 
     // soil moisture
     c.fillStyle = 'rgb(255,255,255)';
@@ -2851,7 +2826,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
     init : function() {
       this.graphCanvas = document.getElementById('graphCanvas');
       this.graphCanvas.height = window.innerHeight;
-      this.graphCanvas.width = 550; //this.graphCanvas.height;
+      this.graphCanvas.width = this.graphCanvas.height;
       this.ctx = this.graphCanvas.getContext('2d');
       var style = this.graphCanvas.style;
       if (guiControls.showGraph)
@@ -2895,7 +2870,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
       var T_env = [];
 
       c.fillText('' + printDistance(map_range(simXpos, 0, sim_res_y, 0, guiControls.simHeight / 1000.0)), this.graphCanvas.width - 70, 20);
-
+      
       // Draw temperature line
       c.beginPath();
       for (var y = 0; y < sim_res_y; y++) {
@@ -3002,7 +2977,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
        // var velocity = rawVelocityTo_ms(Math.sqrt(Math.pow(baseTextureValues[4 * y], 2) + Math.pow(baseTextureValues[4 * y + 1], 2)));
 
-        var rh = round_number(calculateRelativeHumidity(temp,dewPoint));
+        var rh = round_number(get_rh(temp,dewPoint));
         var pwat = get_pwat(dewPoint);
 
         c.font = '15px Arial';
@@ -3110,9 +3085,12 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
         var velocity = rawVelocityTo_ms(baseTextureValues[4 * y]); // horizontal wind velocity
 
         let Xpos = this.graphCanvas.width - 70;
+        let world_y = map_range(y, 0, sim_res_y, 0, guiControls.simHeight);
 
         if (y == simYpos){
+        var pressure = get_pressure(world_y);
           c.fillText(`${printVelocity(Math.abs(velocity))}`, this.graphCanvas.width - 60, scrYpos + 20);
+          c.fillText(`Pressure: ${(Math.round((pressure/100)*100)/100)}hPa`,(graphCanvas.width-220),140);
         };
 
         c.beginPath();
