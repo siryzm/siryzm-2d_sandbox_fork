@@ -14,16 +14,24 @@ function updateSetupSliders()
   let simResX = parseInt(simResSelX.value);
   let simResY = parseInt(simResSelY.value);
   let simHeight = parseInt(simHeightSel.value);
+  let air_temp = parseInt(AirTempSlider.value);
+  let water_temp = parseInt(WaterTempSlider.value);
 
   let cellHeight = simHeight / simResY;
   let simWidth = cellHeight * simResX;
 
   document.getElementById('simWorldProperties').innerHTML = 'cellHeight: ' + cellHeight.toFixed(1) + ' m  &nbsp&nbsp&nbsp   Simulation width: ' + (simWidth / 1000).toFixed(1) + ' km';
 
+  document.getElementById("AirTempShow").value = (`${air_temp}°C`);
+  document.getElementById("AirTempWarning").style.display = (air_temp == 15) ? 'none' : 'block';
+
+  document.getElementById("WaterTempShow").value = (`${water_temp}°C`);
+  document.getElementById("WaterTempWarning").style.display = (water_temp == 27) ? 'none' : 'block';
+
   document.getElementById("simHeightWarning").style.display = (simHeight == 12000) ? 'none' : 'block';
   document.getElementById("simResYWarning").style.display = (simResY == 300) ? 'none' : 'block';
   document.getElementById("simResShowX").value = simResX;
-  document.getElementById("simResShowY").value = simResY
+  document.getElementById("simResShowY").value = simResY;
   document.getElementById("simHeightShow").value = simHeight + ' m';
 }
 
@@ -58,6 +66,7 @@ const guiControls_default = {
   globalHeating : -0.00005,
   sunIntensity : 1.0,
   waterTemperature : 27.0, // °C
+  airTemperature : 19.0, // °C
   landEvaporation : 0.00005,
   waterEvaporation : 0.0001,
   evapHeat : 2.2,          //  Real: 2260 J/g
@@ -1059,6 +1068,9 @@ async function loadData()
     sim_res_x = parseInt(document.getElementById('simResSelX').value);
     sim_res_y = parseInt(document.getElementById('simResSelY').value);
     sim_height = parseInt(document.getElementById('simHeightSel').value);
+
+    (guiControls || guiControls_default).airTemperature = parseInt(document.getElementById('AirTempSlider').value);
+    (guiControls || guiControls_default).waterTemperature = parseInt(document.getElementById('WaterTempSlider').value);
 
     NUM_DROPLETS = (sim_res_x * sim_res_y) / NUM_DROPLETS_DEVIDER;
     SETUP_MODE = true;
@@ -4427,7 +4439,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
   for (var y = 0; y < sim_res_y + 1; y++) {
     let altitude = y / (sim_res_y + 1) * guiControls.simHeight;
-    var realTemp = Math.max(map_range(altitude, 0, 12000, 15.0, -70.0), -60);
+    var realTemp = Math.max(map_range(altitude, 0, 12000, guiControls.airTemperature, -70.0), -60);
 
     initial_T[y] = realToPotentialT(CtoK(realTemp), y); // initial temperature profile
   }
