@@ -26,7 +26,7 @@ let cape = 0;
 let cinh = 0;
 
 for (let i = 0; i < T_parcel.length; i++) {
-let buoyancy = (((ctok(T_parcel[i])-ctok(T_env[i]))/ctok(T_sfc_env))*2.333);
+let buoyancy = (((ctok(T_parcel[i])-ctok(T_env[i]))/ctok(T_sfc_env))*1.888);
 
     cape += ((buoyancy > 0) && buoyancy || 0);
     cinh += ((buoyancy < 0) && buoyancy || 0);
