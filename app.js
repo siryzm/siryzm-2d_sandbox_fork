@@ -26,7 +26,7 @@ function updateSetupSliders()
   document.getElementById("AirTempWarning").style.display = (air_temp == 15) ? 'none' : 'block';
 
   document.getElementById("WaterTempShow").value = (`${water_temp}°C`);
-  document.getElementById("WaterTempWarning").style.display = (water_temp == 27) ? 'none' : 'block';
+  document.getElementById("WaterTempWarning").style.display = (water_temp == 25) ? 'none' : 'block';
 
   document.getElementById("simHeightWarning").style.display = (simHeight == 12000) ? 'none' : 'block';
   document.getElementById("simResYWarning").style.display = (simResY == 300) ? 'none' : 'block';
@@ -58,40 +58,40 @@ const mToFt = 3.28084;
 const saveFileVersionID = 263574036; // Uint32 id to check if save file is compatible
 
 const guiControls_default = {
-  vorticity : 0.007,
-  dragMultiplier : 0.01, // 0.1
-  wind : -0.0001,
-  globalEffectsHeight : 3500,
-  globalDrying : 0.000001, // 0.000010
-  globalHeating : -0.00005,
+  vorticity : 0.005, // .007
+  dragMultiplier : 0, // 0.1
+  wind : 0,
+  globalEffectsHeight : 10000,
+  globalDrying : 0.000002, // 0.000010
+  globalHeating : -0.00003,
   sunIntensity : 1.0,
-  waterTemperature : 27.0, // °C
+  waterTemperature : 25.0, // °C
   airTemperature : 19.0, // °C
   landEvaporation : 0.00005,
   waterEvaporation : 0.0001,
-  evapHeat : 2.2,          //  Real: 2260 J/g
-  meltingHeat : 0.43,       //  Real:  334 J/g
+  evapHeat : 2.9, // 2.2         //  Real: 2260 J/g
+  meltingHeat : 0, // .43       //  Real:  334 J/g
   waterWeight : 0.50,       // 0.50
   inactiveDroplets : 0,
-  aboveZeroThreshold : 1.0, // PRECIPITATION
-  subZeroThreshold : 0.01, // 0.01
+  aboveZeroThreshold : 10.0, // 1.0 // PRECIPITATION
+  subZeroThreshold : 0.005, // 0.01
   spawnChance : 0.00002,    // 30. 10 to 50
   snowDensity : 0.2,        // 0.3
   fallSpeed : 0.0003,
   growthRate0C : 0.0001,    // 0.0005
   growthRate_30C : 0.001,   // 0.01
-  freezingRate : 0.0025,
+  freezingRate : 0.0075, // .0025
   meltingRate : 0.0025,
-  evapRate : 0.0005, // 0.0005
+  evapRate : 0, // 0.0005
   displayMode : 'DISP_REAL',
   wrapHorizontally : true,
   SmoothCam : true,
   camSpeed : 0.01,
   exposure : 1.0,
-  timeOfDay : 9.9,
+  timeOfDay : 7, // 9.9
   latitude : 45.0,
-  month : 6.65, // Northern hemisphere summer solstice
-  sunAngle : 9.9,
+  month : 4.45, // 6.65 // Northern hemisphere summer solstice
+  sunAngle : 6.7, // 9.9
   dayNightCycle : true,
   greenhouseGases : 0.001,
   waterGreenHouseEffect : 0.0015,
