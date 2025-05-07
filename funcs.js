@@ -21,20 +21,18 @@ return (temp+273.15);
 };
 
 // calculating convective available energy (CAPE)
-const get_cape = (T_parcel,T_env) => {
+const get_cape = (T_parcel,T_env,T_sfc_env) => {
 let cape = 0;
+let cinh = 0;
 
 for (let i = 0; i < T_parcel.length; i++) {
-let T_parcel_K = ctok(T_parcel[i]);
-let T_env_K = ctok(T_env[i]);
+let buoyancy = (((ctok(T_parcel[i])-ctok(T_env[i]))/ctok(T_sfc_env))*2.333);
 
-let buoyancy = ((T_parcel_K-T_env_K)/T_env_K);
-if (buoyancy < 0){continue};
-
-    cape += buoyancy;
+    cape += ((buoyancy > 0) && buoyancy || 0);
+    cinh += ((buoyancy < 0) && buoyancy || 0);
 };
 
-return cape;
+return [(cape*sim_res_y),(cinh*sim_res_y)];
 };
 
 // calculating precipitable water (PWAT)

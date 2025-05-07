@@ -2865,9 +2865,13 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
       var reachedAir = false;
       var surfaceLevel;
+      var sfc_temp;
 
       var T_parcel = [];
       var T_env = [];
+
+      var T3_parcel = [];
+      var T3_env = [];
 
       c.fillText('' + printDistance(map_range(simXpos, 0, sim_res_y, 0, guiControls.simHeight / 1000.0)), this.graphCanvas.width - 70, 20);
       
@@ -2888,6 +2892,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
             // first non wall cell
             reachedAir = true;
             surfaceLevel = y;
+            sfc_temp = temp;
 
             var potential_3k = baseTextureValues[4*51+3];
             var temp_3k = (potential_3k-((51/sim_res_y)*guiControls.simHeight*guiControls.dryLapseRate)/1000-273.15);
@@ -2915,7 +2920,6 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
             c.fillText('' + printTemp(temp), T_to_Xpos(temp, scrYpos) + 20, scrYpos + 5);
           }
 
-          T_env.push(temp);
           c.lineTo(T_to_Xpos(temp, scrYpos), scrYpos);  // temperature
         } else if (wallTextureValues[4 * y + 2] == 0) { // is surface layer
           if (wallTextureValues[4 * y + 0] != 2) {      // is land, urban or fire
@@ -3022,6 +3026,10 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
       c.beginPath();
 
+      var lcl;
+      var el = [];
+      var el_heights = [];
+
       for (var y = (surfaceLevel+1); y < sim_res_y; y++) {
         var dT = drylapsePerCell;
 
@@ -3034,19 +3042,37 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
         var actualTempChange = dT_saturated(dT, dWt);
 
+        var potentialTemp = baseTextureValues[4 * y + 3];
+        var temp = potentialTemp - ((y / sim_res_y) * guiControls.simHeight * guiControls.dryLapseRate) / 1000.0 - 273.15;
+
         var T = prevTemp + actualTempChange;
 
         var scrYpos = map_range(y, sim_res_y, 0, 0, graphBottem);
+        let sfc_world_y = map_range(surfaceLevel, 0, sim_res_y, 0, guiControls.simHeight);
+        let world_y = map_range(y, 0, sim_res_y, 0, guiControls.simHeight);
 
         c.lineTo(T_to_Xpos(KtoC(T), scrYpos), scrYpos); // temperature
         c.setLineDash([5,3]);
-        T_parcel.push(KtoC(T));
+
+        if (KtoC(T) > temp){
+          el = [world_y,scrYpos,KtoC(T)];
+        }
+
+          T_env.push(temp);
+          T_parcel.push(KtoC(T));
+          el_heights.push(world_y);
+
+        if ((world_y < (sfc_world_y+3000)) && (world_y > lcl)){
+          T3_env.push(temp);
+          T3_parcel.push(KtoC(T));
+        };
 
         prevTemp = T;
         prevCloudWater = Math.max(water - maxWater(prevTemp), 0.0);
 
         if (!reachedSaturation && prevCloudWater > 0.0) {
           reachedSaturation = true;
+          lcl = world_y;
           c.strokeStyle = '#616161'; // dark green for dry lapse rate
           c.stroke();
 
@@ -3058,7 +3084,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
                      scrYpos);                                  // Horizontal ceiling line
             c.strokeStyle = '#FFFFFF';
             c.stroke();
-            c.fillText('' + printAltitude(Math.round(map_range(y - 1, 0, sim_res_y, 0, guiControls.simHeight))), T_to_Xpos(KtoC(T), scrYpos) + 50, scrYpos + 5);
+            c.fillText('' + printAltitude(Math.round(world_y)), T_to_Xpos(KtoC(T), scrYpos) + 50, scrYpos + 5);
           }
 
           c.beginPath();
@@ -3066,14 +3092,33 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
         }
       }
 
-      c.lineWidth = 2.0;           // 3
-      if (reachedSaturation) {
-        c.strokeStyle = '#FFFFFF'; // light green for saturated lapse rate
-      } else
-        c.strokeStyle = '#616161';
-      
+      // drawing EL line
       c.stroke();
-      c.fillText(`CAPE: ${Math.round(get_cape(T_parcel,T_env)*sim_res_y)}J/kg`,(graphCanvas.width-220),120);
+      c.beginPath();
+      c.setLineDash([0,0]);
+      c.moveTo(T_to_Xpos(el[2],el[1]) - 0, el[1]); // temperature
+      c.lineTo(T_to_Xpos(el[2],el[1]) + 40, el[1]); // Horizontal ceiling line
+      c.strokeStyle = '#FFFFFF';
+      c.stroke();
+      c.fillText(printAltitude(Math.round(el[0])), T_to_Xpos(el[2], el[1]) + 50, el[1] + 5);
+
+      // slicing CAPE based on EL
+      let sliced = false;
+
+      for (let i = 0; i < el_heights.length; i++){
+      if ((el_heights[i] < el[0]) || sliced){continue};
+
+        sliced = true;
+        T_env = T_env.slice(0,(i+1));
+        T_parcel = T_parcel.slice(0,(i+1));
+      }
+
+      // drawing CAPE text
+      var cape_return = get_cape(T_parcel,T_env,sfc_temp);
+
+      c.fillText(`CAPE: ${Math.round(cape_return[0])}J/kg`,(graphCanvas.width-220),120);
+      c.fillText(`CINH: ${Math.round(cape_return[1])}J/kg`,(graphCanvas.width-220),140);
+      c.fillText(`3CAPE: ${Math.round(get_cape(T3_parcel,T3_env,sfc_temp)[0]/3)}J/kg`,(graphCanvas.width-220),160);
       c.setLineDash([0,0]);
 
       // Draw wind indicators
@@ -3090,7 +3135,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
         if (y == simYpos){
         var pressure = get_pressure(world_y);
           c.fillText(`${printVelocity(Math.abs(velocity))}`, this.graphCanvas.width - 60, scrYpos + 20);
-          c.fillText(`Pressure: ${(Math.round((pressure/100)*100)/100)}hPa`,(graphCanvas.width-220),140);
+          c.fillText(`Pressure: ${(Math.round((pressure/100)*100)/100)}hPa`,(graphCanvas.width-220),180);
         };
 
         c.beginPath();
