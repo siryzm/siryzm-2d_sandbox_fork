@@ -107,7 +107,7 @@ const guiControls_default = {
   paused : false,
   IterPerFrame : 4,
   auto_IterPerFrame : false,
-  dryLapseRate : 10,   // Real: 9.81 degrees / km
+  dryLapseRate : 9.81,   // Real: 9.81 degrees / km
   simHeight : 12000,       // meters
   twelveHourClock : false, // only for display.  false = metric
   lengthUnit : 'LENGTH_UNIT_IMPERIAL',
@@ -261,12 +261,12 @@ function IR_temp(IR)
 
 ////////////// Water Functions ///////////////
 const wf_devider = 250.0;
-const wf_pow = 17.0;
+const wf_pow = 18.0; // 17.0;
 
 function maxWater(Td)
 {
   return Math.pow(Td / wf_devider,
-                  wf_pow); // w = ((Td)/(250))^(18) // Td in Kelvin, w in grams per m^3
+                  9.0); // w = ((Td)/(250))^(18) // Td in Kelvin, w in grams per m^3
 }
 
 function dewpoint(W)
@@ -2933,6 +2933,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
           }
 
           c.lineTo(T_to_Xpos(temp, scrYpos), scrYpos);  // temperature
+
         } else if (wallTextureValues[4 * y + 2] == 0) { // is surface layer
           if (wallTextureValues[4 * y + 0] != 2) {      // is land, urban or fire
             c.fillStyle = 'white';
@@ -4439,7 +4440,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
   for (var y = 0; y < sim_res_y + 1; y++) {
     let altitude = y / (sim_res_y + 1) * guiControls.simHeight;
-    var realTemp = Math.max(map_range(altitude, 0, 12000, guiControls.airTemperature, -70.0), -60);
+    var realTemp = Math.max(map_range(altitude, 0, 12000, guiControls.airTemperature, -70.0), -100);
 
     initial_T[y] = realToPotentialT(CtoK(realTemp), y); // initial temperature profile
   }

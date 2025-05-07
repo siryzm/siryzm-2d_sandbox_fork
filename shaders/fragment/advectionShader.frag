@@ -102,12 +102,12 @@ void main()
     realTemp = potentialToRealT(base[TEMPERATURE]);
 
 
-    //  float excessWater = max(water[TOTAL] - maxWater(realTemp), 0.0); // calculate the amount of extra water beyond 100% rel hum, including both vapor and cloud water
-    float excessWater = water[TOTAL] - maxWater(realTemp);
+    float excessWater = max(water[TOTAL] - maxWater(realTemp), 0.0); // calculate the amount of extra water beyond 100% rel hum, including both vapor and cloud water
+    // float excessWater = water[TOTAL] - maxWater(realTemp);
 
     float overSaturation = excessWater - water[CLOUD]; // amount of water vapor that should condence, but hasn't yet
 
-    float condensation = overSaturation * 0.004;       // 0.002 amount of the oversaturated water vapor that slowly condences
+    float condensation = overSaturation * 0.001;       // 0.002 amount of the oversaturated water vapor that slowly condences
 
     condensation = max(condensation, -water[CLOUD]);   // can't evaporate more than there is
 
@@ -138,13 +138,13 @@ void main()
     // Radiative cooling and heating effects
 
     if (texCoord.y > globalEffectsHeight) {
-      water[TOTAL] -= clamp(globalDrying, 0., max(water[TOTAL] - maxWater(max(realTemp - 20.0, CtoK(-80.))), 0.)); // only dry down to a dew point 20 C below the temperature
+      water[TOTAL] -= clamp(globalDrying, 0., max(water[TOTAL] - maxWater(max(realTemp - 20.0, CtoK(-120.))), 0.)); // only dry down to a dew point 20 C below the temperature
 
       base[TEMPERATURE] += globalHeating;
 
       if (texCoord.y > 0.93) {
-        base[TEMPERATURE] -= (KtoC(realTemp) - -55.0) * 0.0005; // tropopause temperature stabilization
-        // water[TOTAL] -= (water[TOTAL] - 0.0125) * 0.0001;       // keep stratosphere dew point around -80C
+         base[TEMPERATURE] -= (KtoC(realTemp) - -55.0) * 0.0005; // tropopause temperature stabilization
+         water[TOTAL] -= (water[TOTAL] - 0.0125) * 0.0001;       // keep stratosphere dew point around -80C
       }
     }
 
@@ -249,12 +249,15 @@ void main()
       water[SMOKE] = min(max(water[SMOKE], 0.0), 2.0);
 
     } else if (userInputType == 4) {                                                 // drag/move air
+      base.x += ((weight * userInputValues[BRUSH_INTENSITY]) * .05);
 
+    /*
       if (userInputValues.x < -0.5) {                                                // whole width brush
         base.x += userInputMove.x * 1.0 * weight * userInputValues[BRUSH_INTENSITY]; // only move horizontally
       } else {
         base.xy += userInputMove * 1.0 * weight * userInputValues[BRUSH_INTENSITY];
       }
+    */
     } else if (userInputType >= 10) {               // wall
       if (userInputValues[BRUSH_INTENSITY] > 0.0) { // build wall if positive value else remove wall
 
