@@ -266,7 +266,7 @@ const wf_pow = 18.0; // 17.0;
 function maxWater(Td)
 {
   return Math.pow(Td / wf_devider,
-                  9.0); // w = ((Td)/(250))^(18) // Td in Kelvin, w in grams per m^3
+                  (wf_pow*.5)); // w = ((Td)/(250))^(18) // Td in Kelvin, w in grams per m^3
 }
 
 function dewpoint(W)

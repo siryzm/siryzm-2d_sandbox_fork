@@ -107,7 +107,7 @@ void main()
 
     float overSaturation = excessWater - water[CLOUD]; // amount of water vapor that should condence, but hasn't yet
 
-    float condensation = overSaturation * 0.001;       // 0.002 amount of the oversaturated water vapor that slowly condences
+    float condensation = overSaturation * 0.002;       // 0.002 amount of the oversaturated water vapor that slowly condences
 
     condensation = max(condensation, -water[CLOUD]);   // can't evaporate more than there is
 
